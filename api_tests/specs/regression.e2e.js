@@ -1,7 +1,7 @@
 import { expect } from "@wdio/globals";
 import axios from "axios";
 import { API_AUTH_URL, API_BASE_URL } from "../../globals.js";
-import { generateRandomEmail, generateRandomNumber, generateRandomPassword, verifyObjectPropertiesExist, verifyToEqual } from "../../utils.js"
+import { generateRandomEmail, generateRandomId, generateRandomPassword, verifyObjectPropertiesExist, verifyToEqual } from "../../utils.js";
 
 describe("Categories API tests", () => {
   it("Check status code - Categories API", async () => {
@@ -83,7 +83,7 @@ it("Check object properties - Random product API", async () => {
 let idProduct = null;
 
 beforeAll(() => {
-  idProduct = generateRandomNumber();
+  idProduct = generateRandomId();
 });
 it("Check status code - Product API", async () => {
   await axios.get(`${API_BASE_URL}/products/${idProduct}`).then(function (response) {
@@ -116,37 +116,66 @@ it("Product with valid id is displayed - Product API", async () => {
     });
 });
 });
-describe("Registration and Login API tests", () => {
-  let test_email = generateRandomEmail()
-  let test_password = generateRandomPassword()
-  let id = null
-  it("Check status code - Registration", async () => {
-    await axios.post(`${API_AUTH_URL}/register`, {
-      email: test_email,
-      password: test_password,
-      firstName: "Ajla",
-      lastName: "Test"
-    })
-    .then(function (response) {
-      let data = response.data;
-      id = data.user.id
-      verifyToEqual(response.status, 200);
-      verifyObjectPropertiesExist(data, ["user", "token"]);
-    })
+describe("Registration and Login API regression test", () => {
+  beforeEach(() => {
+    axios.interceptors.response.use(
+      (res) => res,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          return Promise.resolve({ status: 401, data: "Could not log in" });
+        } else if (error.response && error.response.status === 400) {
+          return Promise.resolve({
+            status: 400,
+            data: "Could not create new user account",
+          });
+        }
+        return Promise.reject(error);
+      }
+    );
   });
-  it("Check status code - Login", async () => {
-    let id_login = null
-    await axios.post(`${API_AUTH_URL}/login`, {
-      email: test_email,
-      password: test_password
-    })
-    .then(function (response) {
-      let data = response.data;
-      id_login = data.user.id
-      verifyToEqual(response.status, 200);
-      verifyObjectPropertiesExist(data, ["user", "token"]);
-      verifyToEqual(id_login, id)
-      });
+  let test_email = generateRandomEmail();
+  let test_password = generateRandomPassword();
+  it("Registration with invalid email", async () => {
+    let response;
+    response = await axios.post(`${API_AUTH_URL}/register`, {
+      email: "test_email",
+      password: 123,
+      firstName: "Test",
+      lastName: "Testing",
     });
+    let data = response.data;
+    verifyToEqual(response.status, 400);
+    verifyToEqual(data, "Could not create new user account");
   });
-
+  it("Registration without all body parameters", async () => {
+    let response;
+    response = await axios.post(`${API_AUTH_URL}/register`, {
+      email: "test_email",
+      password: test_password,
+      firstName: "Test",
+    });
+    let data = response.data;
+    verifyToEqual(response.status, 400);
+    verifyToEqual(data, "Could not create new user account");
+  });
+  it("Login with invalid email", async () => {
+    let response;
+    response = await axios.post(`${API_AUTH_URL}/login`, {
+      email: "test_email",
+      password: 123,
+    });
+    let data = response.data;
+    verifyToEqual(response.status, 401);
+    verifyToEqual(data, "Could not log in");
+  });
+  it("Login with invalid password", async () => {
+    let response;
+    response = await axios.post(`${API_AUTH_URL}/login`, {
+      email: test_email,
+      password: 123,
+    });
+    let data = response.data;
+    verifyToEqual(response.status, 401);
+    verifyToEqual(data, "Could not log in");
+  });
+});

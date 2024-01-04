@@ -1,6 +1,6 @@
-const generateRandomNumber = () => {
+const generateRandomId = () => {
   let randomDecimal = Math.random();
-  let randomNumberInRange = Math.floor(randomDecimal * (89 - 72 + 1)) + 72;
+  let randomNumberInRange = Math.floor(randomDecimal * (261 - 238 + 1)) + 238;
   return randomNumberInRange;
 };
 
@@ -81,7 +81,7 @@ const waitForStableDOM = async ({ timeout = 25000, interval = 2000, consecutiveU
 }
 
 export {
-  generateRandomNumber,
+  generateRandomId,
   generateRandomEmail,
   generateRandomPassword,
   verifyObjectPropertiesExist,

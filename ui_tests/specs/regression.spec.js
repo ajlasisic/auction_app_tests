@@ -7,6 +7,9 @@ import ProductPage from "../pageObjects/ProductPage.js";
 import { footerLinks, socialMedia } from "../data/urls.js";
 
 describe("Regression test", () => {
+  beforeEach(function () {
+        browser.url('/');
+  });
   it("Login with incorrect email", async () => {
     await LoginPage.login(invalidEmail.email, loginUser.password);
     await LoginPage.verifyErrorMsgText(LoginPage.errorMessage, invalidEmail.errorEmail)

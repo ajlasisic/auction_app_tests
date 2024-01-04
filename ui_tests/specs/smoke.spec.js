@@ -7,6 +7,9 @@ import { registerUser } from "../data/register.js";
 import RegisterPage from "../pageObjects/RegisterPage.js";
 
 describe("Smoke test", () => {
+  beforeEach(function () {
+    browser.url('/');
+  });
   it("Register and logout", async () => {
     await RegisterPage.register(
       registerUser.firstName,
